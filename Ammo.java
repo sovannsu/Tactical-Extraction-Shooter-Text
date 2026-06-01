@@ -1,19 +1,180 @@
 package game;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class Ammo {
 	private String name;
 	private String size;
 	private int projectiles; // Projectiles per shot fired, changes for grenades and some shotgun shells
 	private int fleshDamage; // Hits unarmored body parts
-	private int penetrationPower; // Damage modifier when bullet hits armored body parts, changes for different armor classes
-	/*
-	 * Various accessor and modifier methods for above instance variables.
-	 */
+	private int penetrationPower; // Damage modifier when bullet hits armored body parts
+
+	private static final Map<String, Ammo>         AMMO_TABLE   = new HashMap<>();
+	private static final Map<String, List<String>> CALIBER_POOL = new HashMap<>();
+
+	static {
+		// ── 9x18mm ───────────────────────────────────────────────────────────
+		register("PM SP7 GZH", "9x18mm", 1, 77, 2);
+		register("PM PPE GZH", "9x18mm", 1, 61, 7);
+		register("PM PBM GZH", "9x18mm", 1, 40, 28);
+
+		// ── 9x19mm ───────────────────────────────────────────────────────────
+		register("RIP", "9x19mm", 1, 102, 2);
+		register("Quakemaker", "9x19mm", 1, 85, 8);
+		register("PST GZH", "9x19mm", 1, 54, 20);
+		register("PBP GZH", "9x19mm", 1, 52, 39);
+
+		// ── 9x21mm ───────────────────────────────────────────────────────────
+		register("PE GZH", "9x21mm", 1, 80, 15);
+		register("BT GZH", "9x21mm", 1, 49, 23);
+		register("7N42", "9x21mm", 1, 45, 38);
+
+		// ── 9x39mm ───────────────────────────────────────────────────────────
+		register("SP-5 GS", "9x39mm", 1, 71, 28);
+		register("SP-6 GS", "9x39mm", 1, 60, 48);
+		register("BP GS", "9x39mm", 1, 58, 54);
+
+		// ── .45 ACP ──────────────────────────────────────────────────────────
+		register(".45 RIP", ".45 ACP", 1, 130, 3);
+		register("ACP Match FMJ", ".45 ACP", 1, 72, 25);
+		register("ACP AP", ".45 ACP", 1, 66, 38);
+
+		// ── 4.6x30mm ─────────────────────────────────────────────────────────
+		register("Action SX", "4.6x30mm", 1, 65, 18);
+		register("FMJ SX", "4.6x30mm", 1, 43, 40);
+		register("AP SX", "4.6x30mm", 1, 35, 53);
+
+		// ── 5.7x28mm ─────────────────────────────────────────────────────────
+		register("SS198LF", "5.7x28mm", 1, 70, 17);
+		register("L191 Tracer", "5.7x28mm", 1, 53, 33);
+		register("SS190", "5.7x28mm", 1, 49, 37);
+
+		// ── 12 Gauge ─────────────────────────────────────────────────────────
+		register("Magnum Buckshot", "12 Gauge", 8, 50, 2);
+		register("Flechette", "12 Gauge", 8, 25, 31);
+		register("12G RIP", "12 Gauge", 1, 265, 2);
+		register("AP-20 Slug", "12 Gauge", 1, 164, 37);
+
+		// ── 20 Gauge ─────────────────────────────────────────────────────────
+		register("5.6 Buckshot", "20 Gauge", 8, 26, 1);
+		register("Poleva-6u Slug", "20 Gauge", 1, 135, 17);
+
+		// ── 23x75mm (4 Gauge) ────────────────────────────────────────────────
+		register("Shrapnel-10 Buckshot", "23x75mm", 8, 87, 11);
+		register("Barrikada Slug", "23x75mm", 1, 192, 39);
+		register("Zveda Flashbang Round", "23x75mm", 1, 0, 0);
+
+		// ── .366 TKM ─────────────────────────────────────────────────────────
+		register("TKM Geksa", ".366 TKM", 1, 110, 14);
+		register("TKM EKO", ".366 TKM", 1, 73, 30);
+		register("TKM AP-M", ".366 TKM", 1, 90, 42);
+
+		// ── 5.45x39mm ────────────────────────────────────────────────────────
+		register("PRS GS", "5.45x39mm", 1, 70, 13);
+		register("PS GS", "5.45x39mm", 1, 53, 28);
+		register("BT GS", "5.45x39mm", 1, 48, 37);
+		register("7N40", "5.45x39mm", 1, 52, 42);
+		register("BP GS", "5.45x39mm", 1, 46, 45);
+		register("BS GS", "5.45x39mm", 1, 44, 55);
+		register("PPBS GS Igolnik", "5.45x39mm",  1, 37, 62);
+
+		// ── 5.56x45mm ────────────────────────────────────────────────────────
+		register("Warmageddon", "5.56x45mm", 1, 88, 3);
+		register("M856", "5.56x45mm", 1, 64, 18);
+		register("M855", "5.56x45mm", 1, 57, 31);
+		register("M856A1", "5.56x45mm", 1, 52, 38);
+		register("M855A1", "5.56x45mm", 1, 47, 45);
+		register("M995", "5.56x45mm", 1, 42, 53);
+		register("SSA AP", "5.56x45mm", 1, 38, 57);
+
+		// ── 7.62x25mm ────────────────────────────────────────────────────────
+		register("TT LRNPC", "7.62x25mm", 1, 66, 7);
+		register("TT AKBS", "7.62x25mm", 1, 64, 12);
+		register("TT PST GZH", "7.62x25mm", 1, 50, 25);
+
+		// ── 7.62x39mm ────────────────────────────────────────────────────────
+		register("HP", "7.62x39mm", 1, 87, 15);
+		register("T-45M1 GZH", "7.62x39mm", 1, 64, 30);
+		register("PS GZH", "7.62x39mm", 1, 57, 35);
+		register("BP GZH", "7.62x39mm", 1, 58, 47);
+		register("MAI AP", "7.62x39mm", 1, 47, 58);
+
+		// ── 7.62x51mm ────────────────────────────────────────────────────────
+		register("Ultra Nosler", "7.62x51mm", 1, 107, 15);
+		register("M80", "7.62x51mm", 1, 80, 41);
+		register("M61", "7.62x51mm", 1, 70, 64);
+		register("M993", "7.62x51mm", 1, 67, 70);
+
+		// ── 7.62x54mmR ───────────────────────────────────────────────────────
+		register("HP BT Tracer", "7.62x54mmR", 1, 102, 23);
+		register("T-46M GZH", "7.62x54mmR", 1, 82, 41);
+		register("SNB GZH", "7.62x54mmR", 1, 75, 62);
+		register("BS GS", "7.62x54mmR", 1, 72, 70);
+
+		// ── .300 Blackout ────────────────────────────────────────────────────
+		register("Blackout Whisper", ".300 Blackout", 1, 90, 15);
+		register("Blackout BCP FMJ", ".300 Blackout", 1, 60, 30);
+		register("Blackout CBJ", ".300 Blackout", 1, 58, 43);
+		register("Blackout AP", ".300 Blackout", 1, 51, 48);
+
+		// ── 6.8x51mm ─────────────────────────────────────────────────────────
+		register("SIG FMJ", "6.8x51mm", 1, 80, 36);
+		register("SIG Hybrid", "6.8x51mm", 1, 72, 47);
+
+		// ── 12.7x55mm ────────────────────────────────────────────────────────
+		register("PS12A", "12.7x55mm", 1, 165, 10);
+		register("PS12", "12.7x55mm", 1, 115, 28);
+		register("PS12B", "12.7x55mm", 1, 102, 46);
+
+		// ── .338 Lapua Magnum ────────────────────────────────────────────────
+		register("TAC-X", ".338 Lapua", 1, 196, 18);
+		register("UCW", ".338 Lapua", 1, 142, 32);
+		register("FMJ", ".338 Lapua", 1, 122, 47);
+		register("AP", ".338 Lapua", 1, 115, 79);
+
+		// ── 40mm Grenade Launcher ────────────────────────────────────────────
+		register("M381 HE", "40mm", 10, 199, 1);
+		register("M433 HEDP", "40mm", 15, 199, 1);
+		register("M576 MP-APERS", "40mm", 15, 160, 5);
+		register("VOG-25", "40mm", 15, 199, 0);
+	}
+
+	private static void register(String name, String caliber,int projectiles, int fleshDmg, int pen) {
+		Ammo a = new Ammo();
+		a.name = name;
+		a.size = caliber;
+		a.projectiles = projectiles;
+		a.fleshDamage = fleshDmg;
+		a.penetrationPower = pen;
+		AMMO_TABLE.put(name, a);
+		CALIBER_POOL.computeIfAbsent(caliber, k -> new ArrayList<>()).add(name);
+	}
+
+	public static Ammo randomForCaliber(String caliber) {
+		List<String> pool = CALIBER_POOL.get(caliber);
+		if (pool == null || pool.isEmpty()) {
+			System.err.println("Warning: no ammo registered for caliber '" + caliber + "'");
+			return new Ammo();
+		}
+		String chosen = pool.get((int) (Math.random() * pool.size()));
+		return AMMO_TABLE.get(chosen);
+	}
+
+	public static Ammo get(String name) {
+		Ammo result = AMMO_TABLE.get(name);
+		if (result == null) {
+			System.err.println("Warning: unknown ammo name '" + name + "'");
+			return new Ammo();
+		}
+		return result;
+	}
 
 	public String getName() {
 		return name;
 	}
-
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -21,508 +182,30 @@ public class Ammo {
 	public String getSize() {
 		return size;
 	}
+	public void   setSize(String size) {
+		 this.size = size;
 
-	public void setSize(String size) {
-		this.size = size;
 	}
 
-	public int getProjectiles() {
+	public int  getProjectiles() {
 		return projectiles;
 	}
-
 	public void setProjectiles(int projectiles) {
 		this.projectiles = projectiles;
 	}
 
-	public int getFleshDamage() {
+	public int  getFleshDamage() {
 		return fleshDamage;
 	}
-
 	public void setFleshDamage(int fleshDamage) {
 		this.fleshDamage = fleshDamage;
+
 	}
 
-	public int getPenetrationPower() {
+	public int  getPenetrationPower() { 
 		return penetrationPower;
 	}
-
-	public void setPenetrationPower(int penetrationPower) {
-		this.penetrationPower = penetrationPower;
-	}
-
-	public Ammo nineM(String bulletName) { // 9xXXmm
-		Ammo bullet = new Ammo();
-		bullet.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "PM SP7 GZH": // 9x18mm
-			bullet.setFleshDamage(77);
-			bullet.setPenetrationPower(2);
-			break;
-		case "PM PPE GZH": // 9x18mm
-			bullet.setFleshDamage(61);
-			bullet.setPenetrationPower(7);
-			break;
-		case "PM PBM GZH": // 9x18mm
-			bullet.setFleshDamage(40);
-			bullet.setPenetrationPower(28);
-			break;
-		case "RIP": // 9x19mm
-			bullet.setFleshDamage(102);
-			bullet.setPenetrationPower(2);
-			break;
-		case "Quakemaker": // 9x19mm
-			bullet.setFleshDamage(85);
-			bullet.setPenetrationPower(8);
-			break;
-		case "PST GZH": // 9x19mm
-			bullet.setFleshDamage(54);
-			bullet.setPenetrationPower(20);
-			break;
-		case "PBP GZH": // 9x19mm
-			bullet.setFleshDamage(52);
-			bullet.setPenetrationPower(39);
-			break;
-		case "PE GZH": // 9x21mm
-			bullet.setFleshDamage(80);
-			bullet.setPenetrationPower(15);
-			break;
-		case "BT GZH": // 9x21mm
-			bullet.setFleshDamage(49);
-			bullet.setPenetrationPower(23);
-			break;
-		case "7N42": // 9x21mm
-			bullet.setFleshDamage(45);
-			bullet.setPenetrationPower(38);
-			break;
-		case "SP-5 GS": // 9x39mm
-			bullet.setFleshDamage(71);
-			bullet.setPenetrationPower(28);
-			break;
-		case "SP-6 GS": // 9x39mm
-			bullet.setFleshDamage(60);
-			bullet.setPenetrationPower(48);
-			break;
-		case "BP GS": // 9x39mm
-			bullet.setFleshDamage(58);
-			bullet.setPenetrationPower(54);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo fortyFive(String bulletName) { // .45
-		Ammo bullet = new Ammo();
-		bullet.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "RIP":
-			bullet.setFleshDamage(130);
-			bullet.setPenetrationPower(3);
-			break;
-		case "ACP Match FMJ":
-			bullet.setFleshDamage(72);
-			bullet.setPenetrationPower(25);
-			break;
-		case "ACP AP":
-			bullet.setFleshDamage(66);
-			bullet.setPenetrationPower(38);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo fourSix(String bulletName) { // 4.6x30mm
-		Ammo bullet = new Ammo();
-		bullet.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "Action SX":
-			bullet.setFleshDamage(65);
-			bullet.setPenetrationPower(18);
-			break;
-		case "FMJ SX":
-			bullet.setFleshDamage(43);
-			bullet.setPenetrationPower(40);
-			break;
-		case "AP SX":
-			bullet.setFleshDamage(35);
-			bullet.setPenetrationPower(53);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo fiveSeven(String bulletName) { // 5.7x28mm
-		Ammo bullet = new Ammo();
-		bullet.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "SS198LF":
-			bullet.setFleshDamage(70);
-			bullet.setPenetrationPower(17);
-			break;
-		case "L191 Tracer":
-			bullet.setFleshDamage(53);
-			bullet.setPenetrationPower(33);
-			break;
-		case "SS190":
-			bullet.setFleshDamage(49);
-			bullet.setPenetrationPower(37);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo twelveG(String bulletName) { // 12 Gauge
-		Ammo bullet = new Ammo();
-		this.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "Magnum Buckshot":
-			bullet.setProjectiles(8);
-			bullet.setFleshDamage(50);
-			bullet.setPenetrationPower(2);
-			break;
-		case "Flechette":
-			bullet.setProjectiles(8);
-			bullet.setFleshDamage(25);
-			bullet.setPenetrationPower(31);
-			break;
-		case "RIP":
-			bullet.setFleshDamage(265);
-			bullet.setPenetrationPower(2);
-			break;
-		case "AP-20 Slug":
-			bullet.setFleshDamage(164);
-			bullet.setPenetrationPower(37);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo twentyG(String bulletName) { // 20 Gauge
-		Ammo bullet = new Ammo();
-		this.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "RIP":
-			bullet.setFleshDamage(265);
-			bullet.setPenetrationPower(2);
-			break;
-		case "AP-20 Slug":
-			bullet.setFleshDamage(164);
-			bullet.setPenetrationPower(37);
-			break;
-		case "5.6 Buckshot":
-			bullet.setProjectiles(8);
-			bullet.setFleshDamage(26);
-			bullet.setPenetrationPower(1);
-			break;
-		case "Poleva-6u Slug":
-			bullet.setProjectiles(1);
-			bullet.setFleshDamage(135);
-			bullet.setPenetrationPower(17);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo fourG(String bulletName) { // 23x75mm
-		Ammo bullet = new Ammo();
-		this.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "Shrapnel-10 Buckshot":
-			bullet.setProjectiles(8);
-			bullet.setFleshDamage(87);
-			bullet.setPenetrationPower(11);
-			break;
-		case "Barrikada Slug":
-			bullet.setFleshDamage(192);
-			bullet.setPenetrationPower(39);
-			break;
-		case "Zveda Flashbang Round":
-			bullet.setFleshDamage(0);
-			bullet.setPenetrationPower(0);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo threeSixSix(String bulletName) { // .366
-		Ammo bullet = new Ammo();
-		this.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "TKM Geksa" :
-			bullet.setFleshDamage(110);
-			bullet.setPenetrationPower(14);
-			break;
-		case "TKM EKO" :
-			bullet.setFleshDamage(73);
-			bullet.setPenetrationPower(30);
-			break;
-		case "TKM AP-M" :
-			bullet.setFleshDamage(90);
-			bullet.setPenetrationPower(42);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo fiveFourFive(String bulletName) { // 5.45x39mm
-		Ammo bullet = new Ammo();
-		bullet.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "PRS GS" :
-			bullet.setFleshDamage(70);
-			bullet.setPenetrationPower(13);
-			break;
-		case "PS GS" :
-			bullet.setFleshDamage(53);
-			bullet.setPenetrationPower(28);
-			break;
-		case "BT GS" :
-			bullet.setFleshDamage(48);
-			bullet.setPenetrationPower(37);
-			break;
-		case "7N40" :
-			bullet.setFleshDamage(52);
-			bullet.setPenetrationPower(42);
-			break;
-		case "BP GS" :
-			bullet.setFleshDamage(46);
-			bullet.setPenetrationPower(45);
-			break;
-		case "PPBS GS Igolnik" :
-			bullet.setFleshDamage(37);
-			bullet.setPenetrationPower(62);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo fiveFiveSix(String bulletName) { // 5.56x45mm
-		Ammo bullet = new Ammo();
-		bullet.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "Warmageddon" :
-			bullet.setFleshDamage(88);
-			bullet.setPenetrationPower(3);
-			break;
-		case "M856" :
-			bullet.setFleshDamage(64);
-			bullet.setPenetrationPower(18);
-			break;
-		case "M855" :
-			bullet.setFleshDamage(57);
-			bullet.setPenetrationPower(31);
-			break;
-		case "M856A1" :
-			bullet.setFleshDamage(52);
-			bullet.setPenetrationPower(38);
-			break;
-		case "M995" :
-			bullet.setFleshDamage(42);
-			bullet.setPenetrationPower(53);
-			break;
-		case "SSA AP" :
-			bullet.setFleshDamage(38);
-			bullet.setPenetrationPower(57);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo sevenSixTwo(String bulletName) { // 7.62xXXmm
-		Ammo bullet = new Ammo();
-		bullet.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "TT LRNPC" : // 7.62x25mm
-			bullet.setFleshDamage(66);
-			bullet.setPenetrationPower(7);
-			break;
-		case "TT AKBS" : // 7.62x25mm
-			bullet.setFleshDamage(64);
-			bullet.setPenetrationPower(12);
-			break;
-		case "TT PST GZH" : // 7.62x25mm
-			bullet.setFleshDamage(50);
-			bullet.setPenetrationPower(25);
-			break;
-		case "HP" : // 7.62x39mm
-			bullet.setFleshDamage(87);
-			bullet.setPenetrationPower(15);
-			break;
-		case "T-51M1 GZH" : // 7.62x39mm
-			bullet.setFleshDamage(64);
-			bullet.setPenetrationPower(30);
-			break;
-		case "PS GZH" : // 7.62x39mm
-			bullet.setFleshDamage(57);
-			bullet.setPenetrationPower(35);
-			break;
-		case "BP GZH" : // 7.62x39mm
-			bullet.setFleshDamage(58);
-			bullet.setPenetrationPower(47);
-			break;
-		case "MA1 AP" : // 7.62x39mm
-			bullet.setFleshDamage(47);
-			bullet.setPenetrationPower(58);
-			break;
-		case "Ultra Nosler" : // 7.62x51mm
-			bullet.setFleshDamage(107);
-			bullet.setPenetrationPower(15);
-			break;
-		case "M80" : // 7.62x51mm
-			bullet.setFleshDamage(80);
-			bullet.setPenetrationPower(41);
-			break;
-		case "M61" : // 7.62x51mm
-			bullet.setFleshDamage(70);
-			bullet.setPenetrationPower(64);
-			break;
-		case "M993" : // 7.62x51mm
-			bullet.setFleshDamage(67);
-			bullet.setPenetrationPower(70);
-			break;
-		case "HP BT Tracer" : // 7.62x54mm
-			bullet.setFleshDamage(102);
-			bullet.setPenetrationPower(23);
-			break;
-		case "T-46M GZH" : // 7.62x54mm
-			bullet.setFleshDamage(82);
-			bullet.setPenetrationPower(41);
-			break;
-		case "SNB GZH" : // 7.62x54mm
-			bullet.setFleshDamage(75);
-			bullet.setPenetrationPower(62);
-			break;
-		case "BS GS" : // 7.62x54mm
-			bullet.setFleshDamage(72);
-			bullet.setPenetrationPower(70);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo threeHundred(String bulletName) { // .300
-		Ammo bullet = new Ammo();
-		bullet.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "Blackout Whisper" :
-			bullet.setFleshDamage(90);
-			bullet.setPenetrationPower(15);
-			break;
-		case "Blackout BCP FMJ" :
-			bullet.setFleshDamage(60);
-			bullet.setPenetrationPower(30);
-			break;
-		case "Blackout CBJ" :
-			bullet.setFleshDamage(58);
-			bullet.setPenetrationPower(43);
-			break;
-		case "Blackout AP" :
-			bullet.setFleshDamage(51);
-			bullet.setPenetrationPower(48);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo sixEight(String bulletName) { // 6.8x51mm
-		Ammo bullet = new Ammo();
-		bullet.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "SIG FMJ" :
-			bullet.setFleshDamage(80);
-			bullet.setPenetrationPower(36);
-			break;
-		case "SIG Hybrid" :
-			bullet.setFleshDamage(72);
-			bullet.setPenetrationPower(47);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo twelveSeven(String bulletName) { // 12.7x55mm
-		Ammo bullet = new Ammo();
-		bullet.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "PS12A" :
-			bullet.setFleshDamage(165);
-			bullet.setPenetrationPower(10);
-			break;
-		case "PS12" :
-			bullet.setFleshDamage(115);
-			bullet.setPenetrationPower(28);
-			break;
-		case "PS12B" :
-			bullet.setFleshDamage(102);
-			bullet.setPenetrationPower(46);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo threeThreeEight(String bulletName) { // .338 Lapua
-		Ammo bullet = new Ammo();
-		bullet.setName(bulletName);
-		bullet.setProjectiles(1);
-		switch (bullet.getName()) {
-		case "TAC-X" :
-			bullet.setFleshDamage(196);
-			bullet.setPenetrationPower(18);
-			break;
-		case "UCW" :
-			bullet.setFleshDamage(142);
-			bullet.setPenetrationPower(32);
-			break;
-		case "FMJ" :
-			bullet.setFleshDamage(122);
-			bullet.setPenetrationPower(47);
-			break;
-		case "AP" :
-			bullet.setFleshDamage(115);
-			bullet.setPenetrationPower(79);
-			break;
-		}
-		return bullet;
-	}
-
-	public Ammo fortyMM(String bulletName) { // 40xXXmm Grenade Launcher Cartridges
-		Ammo grenadeLauncherCartridge = new Ammo();
-		grenadeLauncherCartridge.setName(bulletName);
-		switch (grenadeLauncherCartridge.getName()) {
-		case "M381 HE" :
-			grenadeLauncherCartridge.setProjectiles(10);
-			grenadeLauncherCartridge.setFleshDamage(199);
-			grenadeLauncherCartridge.setPenetrationPower(1);
-			break;
-		case "M433 HEDP" :
-			grenadeLauncherCartridge.setProjectiles(15);
-			grenadeLauncherCartridge.setFleshDamage(199);
-			grenadeLauncherCartridge.setPenetrationPower(1);
-			break;
-		case "M576 MP-APERS" :
-			grenadeLauncherCartridge.setProjectiles(15);
-			grenadeLauncherCartridge.setFleshDamage(160);
-			grenadeLauncherCartridge.setPenetrationPower(5);
-			break;
-		case "VOG-25" :
-			grenadeLauncherCartridge.setProjectiles(15);
-			grenadeLauncherCartridge.setFleshDamage(199);
-			grenadeLauncherCartridge.setPenetrationPower(0);
-			break;
-		}
-		return grenadeLauncherCartridge;
+	public void setPenetrationPower(int pen) {
+		this.penetrationPower = pen;
 	}
 }

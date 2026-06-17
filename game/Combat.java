@@ -26,7 +26,7 @@ public class Combat {
 
         // Scavs aim poorly (~30% hit rate). Set a baseline if aim wasn't assigned.
         double enemyAim = enemy.getAim() > 0 ? enemy.getAim() : defaultAim(enemy);
-        double enemyHealth = enemy.getTotalHealth();
+        //double enemyHealth = enemy.getTotalHealth();
         boolean playerFled = false;
 
         while (enemy.getTotalHealth() > 0 && player.isAlive() && !playerFled) {
@@ -148,7 +148,7 @@ public class Combat {
         player.takeDamage(round);
         System.out.printf("<< %s fires %s — HITS! You take %.0f damage.%n%n",
             enemy.getName(), round.getName(),
-            round.getFleshDamage() * round.getProjectiles());
+            (double) (round.getFleshDamage() * round.getProjectiles()));
     }
 
     /** Default aim values when Enemy.aim was never explicitly set. */

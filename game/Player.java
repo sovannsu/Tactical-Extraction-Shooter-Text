@@ -9,6 +9,11 @@ public class Player {
     private int reserveAmmo;     // Extra magazines worth of ammo
     private String currentRoom;  // Key into the Room map
 
+    // -- Armor (skeleton) --
+    // Default to empty slots (class 0 = unarmored). Swap in real Gear later.
+    private Gear helmet;
+    private Gear bodyArmor;
+
     public Player(String name) {
         this.name = name;
         this.maxHealth = 440;
@@ -18,6 +23,11 @@ public class Player {
         this.ammoCount = weapon.getCapacity();
         this.reserveAmmo = weapon.getCapacity() * 3; // 3 spare mags
         this.currentRoom = "Checkpoint";
+
+        // Unarmored to start. Assign real Gear here (or via setters) once the
+        // helmet/armor catalogue exists.
+        this.helmet    = Gear.none(Gear.Slot.HELMET);
+        this.bodyArmor = Gear.none(Gear.Slot.BODY_ARMOR);
     }
 
     // --- Accessors ---
@@ -37,6 +47,24 @@ public class Player {
     public String getCurrentRoom() { return currentRoom; }
 
     public void setCurrentRoom(String room) { this.currentRoom = room; }
+
+    // --- Armor ---
+
+    public Gear getHelmet()    { return helmet; }
+    public Gear getBodyArmor() { return bodyArmor; }
+
+    public void setHelmet(Gear helmet)       { this.helmet = helmet; }
+    public void setBodyArmor(Gear bodyArmor) { this.bodyArmor = bodyArmor; }
+
+    /** Armor class protecting the head; 0 if no helmet. */
+    public int getHelmetClass() {
+        return helmet != null ? helmet.getArmorClass() : 0;
+    }
+
+    /** Armor class protecting the body; 0 if no body armor. */
+    public int getBodyArmorClass() {
+        return bodyArmor != null ? bodyArmor.getArmorClass() : 0;
+    }
 
     // --- Combat helpers ---
 
@@ -67,17 +95,23 @@ public class Player {
     }
 
     /**
-     * Apply incoming damage. Simple model: if penetrationPower >= 20 the round
-     * punches through light cover and deals full damage; otherwise 60% damage
-     * (simulating soft cover / partial protection a player might have).
+     * Apply a precomputed amount of damage. The hit (head/body, armor, headshot
+     * multiplier) is resolved by Game.resolveHit, which keeps the player and the
+     * enemies running through one shared damage model.
      */
+    public void applyDamage(double amount) {
+        currentHealth = Math.max(0, currentHealth - amount);
+    }
+
+    /**
+     * @deprecated Superseded by Game.resolveHit + applyDamage. Kept only so the
+     * legacy Combat.java still compiles; delete once Combat.java is removed.
+     */
+    @Deprecated
     public void takeDamage(Ammo round) {
-        double dmg;
-        if (round.getPenetrationPower() >= 20) {
-            dmg = round.getFleshDamage();
-        } else {
-            dmg = round.getFleshDamage() * 0.6;
-        }
+        double dmg = (round.getPenetrationPower() >= 20)
+            ? round.getFleshDamage()
+            : round.getFleshDamage() * 0.6;
         currentHealth = Math.max(0, currentHealth - dmg);
     }
 

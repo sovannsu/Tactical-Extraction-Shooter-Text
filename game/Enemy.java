@@ -190,6 +190,19 @@ public class Enemy {
 		this.secondary = secondary;
 	}
 
+	/** Armor class protecting the head; 0 = unarmored.
+	 *  Enemies carry no armor yet — wire this to real helmet gear once the
+	 *  enemy loadout system is built. */
+	public int getHelmetArmorClass() {
+		return 0;
+	}
+
+	/** Armor class protecting the body; 0 = unarmored.
+	 *  Wire this to real vest / rig gear once enemy loadouts are built. */
+	public int getBodyArmorClass() {
+		return 0;
+	}
+
 	/*
 	 * Overall method for creating enemies for the player to fight. Creates an array
 	 * of Enemy types for the current enemy encounter.
@@ -289,7 +302,7 @@ public class Enemy {
 		}
 	}
 
-	public Enemy createBEAR() {
+	public static Enemy createBEAR() {
 		Enemy bear = new Enemy();
 		bear.setName("The BEAR");
 		bear.setEnemyType("PMC");
@@ -317,7 +330,7 @@ public class Enemy {
 		return bear;
 	}
 
-	public Enemy createUSEC() {
+	public static Enemy createUSEC() {
 		Enemy usec = new Enemy();
 		usec.setName("The USEC");
 		usec.setEnemyType("PMC");
@@ -345,6 +358,11 @@ public class Enemy {
 		return usec;
 	}
 
+	/** A PMC encounter: equally likely BEAR or USEC. Both are tougher than scavs —
+	 *  better aim (0.55 vs 0.30) and better weapon pools. */
+	public static Enemy createPMC() {
+		return (Math.random() < 0.5) ? createBEAR() : createUSEC();
+	}
 	public void specialEnemies(Enemy[] enemies, String map, String time) {
 		Enemy first = new Enemy();
 		first.setEnemyType("Boss");

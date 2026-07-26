@@ -25,6 +25,11 @@ public class Enemy {
 	private Gear backpack; // Backpack - index 4 of gear
 	private Gun[] guns; // List of weapons per person
 	*/
+	// -- Armor (live fields). The commented sketch above is the original design;
+	//    these two are what the combat resolver actually reads. Default to empty
+	//    slots, so an enemy is unarmored unless a factory equips it.
+	private Gear helmet = Gear.none(Gear.Slot.HELMET);
+	private Gear vest   = Gear.none(Gear.Slot.BODY_ARMOR);
 	private Gun primary; // Primary weapon - index 0 of guns
 	private String primaryName; // Name of primary weapon
 	private Gun secondary; // Secondary weapon if equipped - index 1 of guns
@@ -37,8 +42,8 @@ public class Enemy {
 			"VPO-215", "Mosin" }; // Snipers indexes 17-18
 	private static final String[] BEARWeapons = { "PM", "SR-1MP", "MP-443", // Pistols indexes 0-2
 			"MP-133", "MP-153", "Saiga-12K", "KS-23M", // Shotguns indexes 3-6
-			"PP-91", "PP19-01", "STM-9", "PPSh-41", // SMGs indexes 7-10
-			"AKS-74U", "AK-74", "AK-104", "AKM", "ASh-12", "AS VAL", // Assault rifles indexes 11-16
+			"PP-91", "PP-19-01", "STM-9", "PPSh-41", // SMGs indexes 7-10
+			"AKS-74U", "AK-74", "AK-104", "AKM", "ASh-12", "AS-VAL", // Assault rifles indexes 11-16
 			"SKS", "VPO-101", "VPO-136", "ADAR 2-15", "SVDS", // Assault carbines and DMRs indexes 17-21
 			"VPO-215", "Mosin", "SV-98", "T-5000" }; // Snipers indexes 22-25
 	private static final String[] USECWeapons = { "Glock 17", "FN 5-7", "M9A3", // Pistols indexes 0-2
@@ -48,7 +53,7 @@ public class Enemy {
 			"TX-15", "RFB", "SR-25", "M1A", "G28", "RSASS", // Assault carbines and DMRs indexes 18-23
 			"M700", "DVL-10", "AXMC" }; // Snipers indexes 24-26
 	private static final String[] raiderWeapons = { "AS-VAL", "KBP 9A-91", "AKS-74U", "AK-74M", "AK-12", "AK-104", "AK-105", // RUS weaponry indexes 0-6
-			"MP7A2", "FN P90", "MP5", "MCX", "MDR", "M4A1", "AUG A3", "SA-58" }; // NATO weaponry indexes 7-14
+			"MP7A2", "FN P90", "MP5", "MCX", "MDR", "M4A1", "Aug A3", "SA-58" }; // NATO weaponry indexes 7-14
 	private static final String[] rogueWeapons = { "MCX Spear", "MDR", "M4A1", "HK 416A5", "AUG A3", "SA-58" }; // NATO weaponry indexes 0-5
 	/*
 	 * Various accessor and modifier methods for above instance variables.
@@ -190,17 +195,30 @@ public class Enemy {
 		this.secondary = secondary;
 	}
 
-	/** Armor class protecting the head; 0 = unarmored.
-	 *  Enemies carry no armor yet — wire this to real helmet gear once the
-	 *  enemy loadout system is built. */
+	// -- Armor slots --
+	public Gear getHelmet()       { return helmet; }
+	public void setHelmet(Gear g) { this.helmet = g; }
+	public Gear getVest()         { return vest; }
+	public void setVest(Gear g)   { this.vest = g; }
+
+	/** Armor rating protecting the head; 0 = unarmored. Reads the helmet gear,
+	 *  mirroring Player.getHelmetClass(). */
 	public int getHelmetArmorClass() {
-		return 0;
+		return helmet != null ? helmet.getArmorClass() : 0;
 	}
 
-	/** Armor class protecting the body; 0 = unarmored.
-	 *  Wire this to real vest / rig gear once enemy loadouts are built. */
+	/** Armor rating protecting the body; 0 = unarmored. Reads the vest gear,
+	 *  mirroring Player.getBodyArmorClass(). */
 	public int getBodyArmorClass() {
-		return 0;
+		return vest != null ? vest.getArmorClass() : 0;
+	}
+
+	/** Equip helmet/vest by rating (0 = leave that slot empty). Durability is a
+	 *  nominal pool for now -- nothing consumes it until degrade() is wired in.
+	 *  On the 0/10/20/30... scale, the rating is the penetration a plate resists. */
+	private static void equipArmor(Enemy e, int helmetRating, int vestRating) {
+		if (helmetRating > 0) e.setHelmet(new Gear("Helmet", Gear.Slot.HELMET,     helmetRating, 100));
+		if (vestRating   > 0) e.setVest(  new Gear("Vest",   Gear.Slot.BODY_ARMOR, vestRating,   100));
 	}
 
 	/*
@@ -266,6 +284,11 @@ public class Enemy {
 			scav.setPrimary(new Gun(scavWeapons[idx]));
 			scav.setSecondaryName("");
 		}
+		// Scavs are mostly unarmored; a minority scrounge a light vest/helmet.
+		int armorRoll = (int) (Math.random() * 10); // 0-9
+		if (armorRoll < 3)      equipArmor(scav,  0, 10);  // 30%: light vest (rating 10)
+		else if (armorRoll < 4) equipArmor(scav, 10, 10);  // 10%: vest + helmet
+		// else: unarmored (default empty slots)
 		return scav;
 	}
 
@@ -327,6 +350,10 @@ public class Enemy {
 			bear.setSecondaryName(BEARWeapons[random]);
 			bear.setSecondary(new Gun(BEARWeapons[random]));
 		}
+		// PMCs wear real protection: class-2/3 vest, often a helmet.
+		int vestRating   = (Math.random() < 0.5) ? 20 : 30;
+		int helmetRating = (Math.random() < 0.6) ? 10 : 0;
+		equipArmor(bear, helmetRating, vestRating);
 		return bear;
 	}
 
@@ -355,6 +382,10 @@ public class Enemy {
 			usec.setSecondaryName(USECWeapons[random]);
 			usec.setSecondary(new Gun(USECWeapons[random]));
 		}
+		// PMCs wear real protection: class-2/3 vest, often a helmet.
+		int vestRating   = (Math.random() < 0.5) ? 20 : 30;
+		int helmetRating = (Math.random() < 0.6) ? 10 : 0;
+		equipArmor(usec, helmetRating, vestRating);
 		return usec;
 	}
 
@@ -442,6 +473,7 @@ public class Enemy {
 		int random = (int) (Math.random() * 15);
 		raider.setPrimaryName(raiderWeapons[random]);
 		raider.setPrimary(new Gun(raiderWeapons[random]));
+		equipArmor(raider, 20, 40); // heavy: class-4 vest, class-2 helmet
 		return raider;
 	}
 
@@ -468,6 +500,7 @@ public class Enemy {
 		int random = (int) (Math.random() * 6);
 		rogue.setPrimaryName(rogueWeapons[random]);
 		rogue.setPrimary(new Gun(rogueWeapons[random]));
+		equipArmor(rogue, 30, 40); // heavy: class-4 vest, class-3 helmet
 		return rogue;
 	}
 
@@ -659,6 +692,7 @@ public class Enemy {
 			guard.setPrimary(new Gun(BEARWeapons[random]));
 			guard.setSecondaryName("");
 		}
+		equipArmor(guard, 20, 30); // PMC-grade: class-3 vest, class-2 helmet
 		return guard;
 	}
 

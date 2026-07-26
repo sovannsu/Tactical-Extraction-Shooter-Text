@@ -95,6 +95,35 @@ public class Game {
         out.println("\n" + player.statusString());
     }
 
+    public void inspect() {
+        Gun  gun   = player.getWeapon();
+        Ammo round = gun.getAmmunition();
+        out.println("\n-- LOADOUT ----------------------------------");
+        out.println(String.format("Weapon : %s  (%s, mag %d, range %s)",
+            gun.getName(), gun.getCaliber(), gun.getCapacity(), gun.getRange()));
+        if (round != null) {
+            out.println(String.format("Loaded : %s  -- %d flesh, %d pen, x%d pellet%s",
+                round.getName(), round.getFleshDamage(), round.getPenetrationPower(),
+                round.getProjectiles(), round.getProjectiles() == 1 ? "" : "s"));
+        }
+        out.println(String.format("Ammo   : %d / %d  (+%d reserve)",
+            player.getAmmoCount(), gun.getCapacity(), player.getReserveAmmo()));
+        out.println("");
+        out.println("Helmet : " + armorLine(player.getHelmet()));
+        out.println("Body   : " + armorLine(player.getBodyArmor()));
+        out.println("---------------------------------------------");
+    }
+
+    private String armorLine(Gear g) {
+        if (g == null || !g.isArmor()) return "None";
+        int nominal = g.getArmorClass();
+        int eff     = g.effectiveArmorClass();
+        double pct  = g.durabilityFraction() * 100;
+        return (eff == nominal)
+            ? String.format("%s  class %d  (%.0f%%)", g.getName(), nominal, pct)
+            : String.format("%s  class %d -> eff %d  (%.0f%%)", g.getName(), nominal, eff, pct);
+    }
+
     /** Decide who the player just walked into.
      *  Scavs are the staple; PMCs are the rarer, deadlier mercenaries. */
     private Enemy rollEncounter() {
